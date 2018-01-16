@@ -5,7 +5,7 @@ from phue import Bridge
 import os, sys
 
 class Executor:
-    COMMANDS_ZERO_ARGS = ['on', 'off', 'dim', 'bright', 'dimmest']
+    COMMANDS_ZERO_ARGS = ['on', 'off', 'dim', 'bright', 'dimmest', 'read', 'hack']
     COMMANDS_WITH_ARGS = ['brightness']
     COMMANDS = COMMANDS_ZERO_ARGS + COMMANDS_WITH_ARGS
     bridge = None
@@ -21,6 +21,9 @@ class Executor:
 
     def __set_brightness(self, value):
         [setattr(l, 'brightness', value) for l in self.bridge.lights]
+        
+    def __set_xy(self, value):
+        [setattr(l, 'xy', value) for l in self.bridge.lights]
 
     def on(self):
         [setattr(l, 'on', True) for l in self.bridge.lights]
@@ -39,6 +42,16 @@ class Executor:
     def dimmest(self):
         self.on()
         self.__set_brightness(1)
+
+    def read(self):
+        self.on()
+        self.__set_brightness(254)
+        self.__set_xy([0.4449, 0.4066])
+
+    def hack(self):
+        self.on()
+        self.__set_brightness(100)
+        self.__set_xy([0.1771, 0.060])
 
     def brightness(self, value):
         self.on()
