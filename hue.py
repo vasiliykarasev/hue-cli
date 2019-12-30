@@ -1,27 +1,28 @@
-#!/usr/bin/python2
-from __future__ import print_function
 import argparse
+import inspect
 from phue import Bridge
 import os, sys
 
+
 class Executor:
-    COMMANDS_ZERO_ARGS = ['on', 'off', 'dim', 'bright', 'dimmest', 'read', 'hack']
-    COMMANDS_WITH_ARGS = ['brightness']
-    COMMANDS = COMMANDS_ZERO_ARGS + COMMANDS_WITH_ARGS
-    bridge = None
+    # We could even avoid this, but it doesn't seem necessary.
+    COMMANDS = [
+        'on', 'off', 'dim', 'bright', 'dimmest', 'read', 'hack', 'brightness'
+    ]
 
     def __init__(self):
         bridge_ip = os.getenv('HUE_BRIDGE_IP')
         if bridge_ip is None:
-            raise Exception('Could not get HUE_BRIDGE_IP environment variable, '
-                            'did you forget to set it?')
+            raise Exception(
+                'Could not get HUE_BRIDGE_IP environment variable, '
+                'did you forget to set it?')
         self.bridge = Bridge(bridge_ip)
         self.bridge.connect()
         return
 
     def __set_brightness(self, value):
         [setattr(l, 'brightness', value) for l in self.bridge.lights]
-        
+
     def __set_xy(self, value):
         [setattr(l, 'xy', value) for l in self.bridge.lights]
 
@@ -52,6 +53,7 @@ class Executor:
         self.on()
         self.__set_brightness(100)
         self.__set_xy([0.1771, 0.060])
+        #self.__set_xy([0.3, 0.00])
 
     def brightness(self, value):
         self.on()
@@ -59,22 +61,27 @@ class Executor:
         self.__set_brightness(value)
 
     @staticmethod
-    def call(command, value):
-        if command in Executor.COMMANDS_ZERO_ARGS:
-            getattr(Executor(), args.command)()
-        elif command in Executor.COMMANDS_WITH_ARGS:
-            getattr(Executor(), args.command)(args.value)
+    def call(command, values):
+        if command in Executor.COMMANDS:
+            func = getattr(Executor(), args.command)
+            expected_num_args = len(inspect.getargspec(func).args) - 1
+            if len(values) != expected_num_args:
+                raise Exception(('Provided an unusual number of arguments; '
+                                 'expected {} but provided {}').format(
+                                     expected_num_args, len(values)))
+            func(*values)
         else:
             raise Exception('Did not recognize command -- looks like '
                             'something is not working right.')
 
+
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('command', choices=Executor.COMMANDS)
-    parser.add_argument('value', nargs='?', default=None)
+    parser.add_argument('values', nargs='*', default=[], type=int)
     return parser.parse_args()
 
 
 if __name__ == '__main__':
     args = parse_args()
-    Executor.call(args.command, args.value)
+    Executor.call(args.command, args.values)
