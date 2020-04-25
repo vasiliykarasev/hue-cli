@@ -1,7 +1,11 @@
 import argparse
 import inspect
+import warnings
+import os
+# Syntax warnings are coming from phue.
+warnings.filterwarnings(action="ignore", category=SyntaxWarning)
 from phue import Bridge
-import os, sys
+
 
 
 class Executor:
@@ -53,7 +57,6 @@ class Executor:
         self.on()
         self.__set_brightness(100)
         self.__set_xy([0.1771, 0.060])
-        #self.__set_xy([0.3, 0.00])
 
     def brightness(self, value):
         self.on()
@@ -64,7 +67,7 @@ class Executor:
     def call(command, values):
         if command in Executor.COMMANDS:
             func = getattr(Executor(), args.command)
-            expected_num_args = len(inspect.getargspec(func).args) - 1
+            expected_num_args = len(inspect.getfullargspec(func).args) - 1
             if len(values) != expected_num_args:
                 raise Exception(('Provided an unusual number of arguments; '
                                  'expected {} but provided {}').format(

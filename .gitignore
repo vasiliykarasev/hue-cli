@@ -1,2 +1,4 @@
 *.pyc
-
+build/
+dist/
+hue_cli.egg-info/
